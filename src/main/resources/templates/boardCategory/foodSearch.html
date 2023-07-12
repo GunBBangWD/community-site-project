@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+  <meta charset="UTF-8">
+  <title>블루아카이브_list</title>
+  <!-- 현재 페이지에 적용할 부트스트랩, 제이쿼리링크 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <!--  현재 페이지에 필요한 최소한의 css-->
+  <link rel="stylesheet" href="boot.css">
+  <style>
+        .dropdown-menu {
+            display: none;
+        }
+
+        .nav-item.dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .container div {
+            border: 0.5px solid lightgray;
+        }
+
+        .container-fluid>div {
+            border: 0.5px solid lightgray;
+        }
+
+        .container-fluid>div {
+            border: 0.5px solid lightgray;
+        }
+
+        .side_menu {
+            margin: 5px 0px 5px 0px;
+        }
+    </style>
+
+  <script>
+$(document).ready(function() {
+        $(document).on('click', '.toggle-direct', function(event) {
+            event.preventDefault(); // 기본동작 중지 (href 동작 막아줌)
+            $('.direct').toggle(); // toggle the visibility of the next hidden comment
+        });
+
+
+    $('.formButton').on('click', function() {
+        var $row = $(this).closest('div.row');
+        var volume = parseFloat($row.find('.foodVolume').val() || $row.find('.foodVolume').text());
+        var volumePercent = volume/100;
+        var foodDataDto = {
+            boardFoodName: $row.find('.foodName').val() || $row.find('.foodName').text(),
+            boardFoodVolume: volume.toFixed(2),
+            boardFoodKcal: (parseFloat($row.find('.foodKcal').val() || $row.find('.foodKcal').text()) * volumePercent).toFixed(2),
+            boardFoodCarb: (parseFloat($row.find('.foodCarb').val() || $row.find('.foodCarb').text()) * volumePercent).toFixed(2),
+            boardFoodProtein: (parseFloat($row.find('.foodProtein').val() || $row.find('.foodProtein').text()) * volumePercent).toFixed(2),
+            boardFoodFat: (parseFloat($row.find('.foodFat').val() || $row.find('.foodFat').text()) * volumePercent).toFixed(2)
+        };
+      console.log($row.find('.foodName').val());
+      console.log(foodDataDto);
+
+        $.ajax({
+            url: "/board/food/data",
+            type: "POST",
+            data: JSON.stringify(foodDataDto),
+            contentType: "application/json; charset=utf-8",
+            success: function(response) {
+                console.log("성공")
+                window.close();
+            },
+            error: function(error) {
+                alert(error.responseText);
+            }
+        });
+    });
+});
+
+
+
+function page(page){
+      var searchQuery = $("#searchQuery").val();
+      var categoryId = $('#categoryId').val();
+     location.href="/board/food/search/" + page + "?searchQuery=" + searchQuery;
+
+}
+
+
+</script>
+
+
+</head>
+
+
+
+<body>
+
+
+
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center">
+        음식 검색
+      </div>
+    </div>
+    <form role="form" method="get" action="/board/food/search" class="comment-edit">
+    <div class="row">
+        <div class="col-10 text-center">
+          <input th:value="${searchQuery}" name="searchQuery" id="searchQuery" type="text" class="form-control" placeholder="음식 이름을 검색해주세요" />
+        </div>
+        <div class="col-2 text-center">
+          <button class="btn btn-outline-secondary">검색</button>
+        </div>
+    </div>
+    </form>
+
+    <div class="row">
+      <div class="col-12 text-center">
+        검색 결과 (100g 기준)
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-1 text-center">        음식선택      </div>
+      <div class="col-2 text-center">        식사량(g)      </div>
+      <div class="col-5 text-center">        음식명      </div>
+      <div class="col-1 text-center">        칼로리 (kal)      </div>
+      <div class="col-1 text-center">        탄수화물 (g)      </div>
+      <div class="col-1 text-center">        단백질 (g)      </div>
+      <div class="col-1 text-center">        지방 (g)      </div>
+    </div>
+    <div class="row" th:each="food, status : ${foodInformationList.getContent()}">
+      <div class="col-1 text-center"><button class="formButton btn btn-outline-secondary">선택</button></div>
+<!--      <div class="col-2 text-center">-->
+<!--        <a href="#" th:text="${food.foodInformationName}">검색결과음식1</a>-->
+<!--      </div>-->
+
+      <input type="text" class="col-2 foodVolume text-center" placeholder="식사량작성(g)"/>
+      <div class="col-5 foodName text-center" th:if="${food.foodInformationName != null}" th:text="${food.foodInformationName}">음식명</div>
+      <input type="text" class="col-5 foodName text-center" th:if="${food.foodInformationName == null}" th:placeholder="작성해주세요"/>
+<!--      <div class="col-2 text-center" th:if="${food.foodInformationSize != null}" th:text="${food.foodInformationSize}">용량</div>-->
+<!--      <input type="text" class="col-2 text-center" th:if="${food.foodInformationSize == null}" th:placeholder="작성해주세요"/>-->
+      <div class="col-1 foodKcal text-center" th:if="${food.foodInformationKcal != null}" th:text="${food.foodInformationKcal}">칼로리</div>
+      <input type="text" class="col-1 foodKcal text-center" th:if="${food.foodInformationKcal == null}" th:placeholder="'(kcal)'"/>
+      <div class="col-1 foodCarb text-center" th:if="${food.foodInformationCarb != null}" th:text="${food.foodInformationCarb}">탄수화물</div>
+      <input type="text" class="col-1 foodCarb text-center" th:if="${food.foodInformationCarb == null}" th:placeholder="'(g)'"/>
+      <div class="col-1 foodProtein text-center" th:if="${food.foodInformationProtein != null}" th:text="${food.foodInformationProtein}">단백질</div>
+      <input type="text" class="col-1 foodProtein text-center" th:if="${food.foodInformationProtein == null}" th:placeholder="'(g)'"/>
+      <div class="col-1 foodFat text-center" th:if="${food.foodInformationFat != null}" th:text="${food.foodInformationFat}">지방</div>
+      <input type="text" class="col-1 foodFat text-center" th:if="${food.foodInformationFat == null}" th:placeholder="'(g)'"/>
+    </div>
+    <div class="row">
+
+    </div>
+
+    <div class="row">
+      <div th:with="start=${(foodInformationList.number/maxPage)*maxPage + 1}, end=(${(foodInformationList.totalPages == 0) ? 1 : (start + (maxPage - 1) < foodInformationList.totalPages ? start + (maxPage - 1) : foodInformationList.totalPages)})" >
+        <ul class="pagination justify-content-center">
+
+          <li class="page-item" th:classappend="${foodInformationList.first}?'disabled'">
+            <a th:onclick="'javascript:page(' + ${foodInformationList.number - 1} + ')'" aria-label='Previous' class="page-link">
+              <span aria-hidden='true'>Previous</span>
+            </a>
+          </li>
+
+          <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}" th:classappend="${foodInformationList.number eq page-1}?'active':''">
+            <a th:onclick="'javascript:page(' + ${page - 1} + ')'" th:inline="text" class="page-link">[[${page}]]</a>
+          </li>
+
+          <li class="page-item" th:classappend="${foodInformationList.last}?'disabled'">
+            <a th:onclick="'javascript:page(' + ${foodInformationList.number + 1} + ')'" aria-label='Next' class="page-link">
+              <span aria-hidden='true'>Next</span>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-12 text-center">
+        <a href="#" class="toggle-direct">검색 결과 없을시 직접 작성</a>
+      </div>
+    </div>
+    <div class="row direct" style="display:none;">
+      <div class="col-1 text-center">        음식선택      </div>
+      <div class="col-2 text-center">        식사량(g)      </div>
+      <div class="col-5 text-center">        음식명      </div>
+      <div class="col-1 text-center">        칼로리 (kal)      </div>
+      <div class="col-1 text-center">        탄수화물 (g)      </div>
+      <div class="col-1 text-center">        단백질 (g)      </div>
+      <div class="col-1 text-center">        지방 (g)      </div>
+    </div>
+    <div class="row direct" style="display:none;">
+      <div class="col-1 text-center"><button class="formButton btn btn-outline-secondary">선택</button></div>
+      <div class="col-2 text-center"><input type="text" class="form-control foodVolume" placeholder="식사량 작성(g)" /></div>
+      <div class="col-5 text-center"><input type="text" class="form-control foodName" placeholder="음식명 작성" /></div>
+      <div class="col-1 text-center"><input type="text" class="form-control foodKcal" placeholder="(kal)" /></div>
+      <div class="col-1 text-center"><input type="text" class="form-control foodCarb" placeholder="(g)" /></div>
+      <div class="col-1 text-center"><input type="text" class="form-control foodProtein" placeholder="(g)" /></div>
+      <div class="col-1 text-center"><input type="text" class="form-control foodFat" placeholder="(g)" /></div>
+  </div>
+
+    <div class="row">
+
+
+    </div>
+
+
+    <button class="btn btn-outline-secondary" onclick="window.close()">닫기</button>
+
+  </div>
+
+</body>
+
+</html>
