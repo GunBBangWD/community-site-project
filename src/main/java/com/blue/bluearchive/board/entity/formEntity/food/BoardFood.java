@@ -17,6 +17,17 @@ public class BoardFood {
     @Column(name = "board_food_id")
     private int boardFoodId;
 
+    @Column(name = "board_total_volume")
+    private Float totalVolume;
+    @Column(name = "board_total_kcal")
+    private Float totalKcal;
+    @Column(name = "board_total_carb")
+    private Float totalCarb;
+    @Column(name = "board_total_protein")
+    private Float totalProtein;
+    @Column(name = "board_total_fat")
+    private Float totalFat;
+
     @ManyToOne
     @JoinColumn(name = "board_id")
     private Board board;

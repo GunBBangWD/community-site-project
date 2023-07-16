@@ -132,9 +132,82 @@ $(document).ready(function() {
             <div class="h3 col-12 p-2">
               내용 부분
             </div>
-            <div th:each="boardImg:${boardFormDto.boardImgDtoList}" style="text-align: center">
-              <img th:src="${boardImg.boardImgUrl}" class="rounded mgb-15" width="500">
+          </div>
+
+
+
+          <div class="row" id="form-3" style="display:">
+            <div class="h3 col-12 p-2">
+              식단 공유 예시
             </div>
+            <div class="col-12 align-self-center" style="">
+              사진공간 사진추가 공간
+              <div class="row">
+                <div class="col-3" th:each="foodImg:${boardFoodDto.foodImgDtoList}" style="text-align: center" >
+                  <span th:text="${foodImg.boardFoodImgUrl}"></span>
+                  <img th:src="${foodImg.boardFoodImgUrl}" class="rounded mgb-15" width="200">
+                </div>
+              </div>
+            </div>
+            <div id="foodList" class="col-9" style="min-height: 300px;">
+              <div class="row">
+                <div class="col-12 text-center">
+                  식단 음식들
+                </div>
+              </div>
+
+              <div class="row justify-content-center">
+                <div class="col-2 text-center">음식명</div>
+                <div class="col-2 text-center">용량 (g)</div>
+                <div class="col-2 text-center">칼로리 (kal)</div>
+                <div class="col-2 text-center">탄수화물 (g)</div>
+                <div class="col-2 text-center">단백질 (g)</div>
+                <div class="col-2 text-center">지방 (g)</div>
+              </div>
+              <div class="row justify-content-center" th:each="foodPart:${boardFoodDto.foodPartDtoList}">
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodName}">음식명</div>
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodVolume}+'g'">용량 (g)</div>
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodKcal}+'kal'">칼로리 (kal)</div>
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodCarb}+'g'">탄수화물 (g)</div>
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodProtein}+'g'">단백질 (g)</div>
+                <div class="col-2 text-center" th:text="${foodPart.boardFoodFat}+'g'">지방 (g)</div>
+              </div>
+
+            </div>
+
+            <div class="col-3" style="height: 300px;">
+              총 성분표
+              <div class="row">
+                <div class="col-6">총 용량 (g)</div>
+                <div class="col-6" id="totalVolume" th:text="${boardFoodDto.totalVolume}+'g'">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 칼로리 (kal)</div>
+                <div class="col-6" id="totalKcal" th:text="${boardFoodDto.totalKcal}+'kal'">0.0kal</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 탄수화물 (g)</div>
+                <div class="col-6" id="totalCarb" th:text="${boardFoodDto.totalCarb}+'g'">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 단백질 (g)</div>
+                <div class="col-6" id="totalProtein" th:text="${boardFoodDto.totalProtein}+'g'">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 지방 (g)</div>
+                <div class="col-6" id="totalFat" th:text="${boardFoodDto.totalFat}+'g'">0.0g</div>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div class="row"> 본문 사진 부분
+            <div class="col-3" th:each="boardImg:${boardFormDto.boardImgDtoList}" style="text-align: center">
+              <img th:src="${boardImg.boardImgUrl}" class="rounded mgb-15" width="200">
+            </div>
+          </div>
+          <div class="row">
             <pre class="col-12 p-4" style="min-height: 500px;" th:text="${board.boardContent}">
             </pre>
           </div>

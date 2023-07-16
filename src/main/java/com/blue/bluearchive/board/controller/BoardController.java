@@ -4,6 +4,10 @@ import com.blue.bluearchive.admin.service.CategoryService;
 import com.blue.bluearchive.admin.dto.CategoryDto;
 import com.blue.bluearchive.admin.entity.Category;
 import com.blue.bluearchive.board.dto.*;
+import com.blue.bluearchive.board.dto.formDto.ImgDto;
+import com.blue.bluearchive.board.dto.formDto.food.BoardFoodDto;
+import com.blue.bluearchive.board.dto.formDto.food.FoodEditDto;
+import com.blue.bluearchive.board.dto.formDto.food.FoodImgDto;
 import com.blue.bluearchive.board.entity.Board;
 import com.blue.bluearchive.board.repository.BoardRepository;
 import com.blue.bluearchive.board.service.*;
@@ -11,6 +15,7 @@ import com.blue.bluearchive.member.dto.CustomUserDetails;
 import com.blue.bluearchive.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.jni.FileInfo;
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.Banner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,16 +43,12 @@ import java.util.*;
 public class BoardController {
     private final BoardService boardService;
     private final CategoryService categoryService;
-
     private final CommentService commentService;
-
     private final CommentsCommentService commentsCommentService;
-
-    private final MemberRepository memberRepository;
-
     private final BoardRepository boardRepository;
-
     private final BoardLikeHateService boardLikeHateService;
+    private final FoodService foodService;
+    private final ModelMapper modelMapper;
 //    private String[] boardImgFiles; // boardImgFiles 필드
 
 
@@ -124,6 +125,12 @@ public class BoardController {
         model.addAttribute("board", board);
         BoardFormDto boardFormDto= boardService.getBoardImgById(boardId);
         model.addAttribute("boardFormDto",boardFormDto);
+
+        BoardFoodDto boardFoodDto = foodService.getFoodData(boardId);
+        System.out.println("==================푸드 데이터 컨트롤러 진입 후==============");
+        System.out.println(boardFoodDto);
+        model.addAttribute("boardFoodDto",boardFoodDto);
+
         List<CommentDto> commentList = commentService.getCommentByBoardId(boardId);
         model.addAttribute("commentList", commentList);
         Map<Integer, List<CommentsCommentDto>> commentsCommentMap = new HashMap<>();
@@ -148,15 +155,36 @@ public class BoardController {
             //카테고리 선택 추가
             int selectCategoryId= boardFormDto.getCategory().getCategoryId();
             model.addAttribute("selectCategoryId",selectCategoryId);
-
             model.addAttribute("boardFormDto",boardFormDto);
 
             List<BoardImgDto> imageList = boardFormDto.getBoardImgDtoList(); // 이미지 목록을 가져온다고 가정합니다.
             List<String> imageUrls = new ArrayList<>();
-            for (BoardImgDto image : imageList) {
-                imageUrls.add(image.getBoardImgUrl()); // 이미지 URL 정보를 가져온다고 가정합니다.
+            List<ImgDto> imgDtoList = new ArrayList<>();
+            List<ImgDto> foodImgList = new ArrayList<>();
+            //건희 추가
+            BoardFoodDto boardFoodDto = foodService.getFoodData(boardId);
+            FoodEditDto foodEditDto = modelMapper.map(boardFoodDto,FoodEditDto.class);
+            System.out.println("==================수정중==============");
+            System.out.println(foodEditDto);
+            model.addAttribute("boardFoodDto",foodEditDto);
+            for (FoodImgDto foodImg : boardFoodDto.getFoodImgDtoList()){
+                ImgDto foodImgDto = new ImgDto();
+                foodImgDto.setImgUrl(foodImg.getBoardFoodImgUrl());
+                foodImgDto.setImgId("foodImgFile");
+                foodImgDto.setImgListType("foodImgFile");
+                foodImgList.add(foodImgDto);
             }
-            model.addAttribute("imageUrls", imageUrls); // 이미지 URL 목록을 모델에 추가하여 View로 전달합니다.
+            model.addAttribute("foodImageUrls", foodImgList); // 이미지 URL 목록을 모델에 추가하여 View로 전달합니다.
+            for (BoardImgDto image : imageList) {
+                ImgDto imgDto = new ImgDto();
+                imgDto.setImgUrl(image.getBoardImgUrl());
+                imgDto.setImgId("View_area");
+                imgDto.setImgListType("boardImgFile");
+                imgDtoList.add(imgDto); // 이미지 URL 정보를 가져온다고 가정합니다.
+                System.out.println(imgDto);
+            }
+
+            model.addAttribute("imageUrls", imgDtoList); // 이미지 URL 목록을 모델에 추가하여 View로 전달합니다.
 
 
 
@@ -168,8 +196,8 @@ public class BoardController {
     }
     @PostMapping(value = "/board/Edit/{boardId}")
     public String boardUpdate(BoardFormDto boardFormDto,BindingResult bindingResult
-            ,@RequestParam(value = "boardImgFile",required = false)List<MultipartFile>boardImgFileList,@RequestParam(value = "boardImgUrl",required = false)List<String>boardImgUrlList,
-                              Model model){
+            ,@RequestParam(value = "boardImgFile",required = false)List<MultipartFile>boardImgFileList
+            ,@RequestParam(value = "boardImgUrl",required = false)List<String>boardImgUrlList,Model model){
 
         if(bindingResult.hasErrors()){
             return "board/boardWrite";

@@ -13,7 +13,6 @@ public class BoardFoodPart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "board_food_part_id")
     private int boardFoodId;
-
     @Column(name = "board_food_name")
     private String boardFoodName;
 

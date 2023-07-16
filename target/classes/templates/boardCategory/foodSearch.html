@@ -47,14 +47,14 @@ $(document).ready(function() {
     $('.formButton').on('click', function() {
         var $row = $(this).closest('div.row');
         var volume = parseFloat($row.find('.foodVolume').val() || $row.find('.foodVolume').text());
-        var volumePercent = volume/100;
+        var volumePercent = parseFloat(volume/100.0);
         var foodDataDto = {
             boardFoodName: $row.find('.foodName').val() || $row.find('.foodName').text(),
-            boardFoodVolume: volume.toFixed(2),
-            boardFoodKcal: (parseFloat($row.find('.foodKcal').val() || $row.find('.foodKcal').text()) * volumePercent).toFixed(2),
-            boardFoodCarb: (parseFloat($row.find('.foodCarb').val() || $row.find('.foodCarb').text()) * volumePercent).toFixed(2),
-            boardFoodProtein: (parseFloat($row.find('.foodProtein').val() || $row.find('.foodProtein').text()) * volumePercent).toFixed(2),
-            boardFoodFat: (parseFloat($row.find('.foodFat').val() || $row.find('.foodFat').text()) * volumePercent).toFixed(2)
+            boardFoodVolume: volume,
+            boardFoodKcal: (parseFloat($row.find('.foodKcal').val() || $row.find('.foodKcal').text()) * volumePercent),
+            boardFoodCarb: (parseFloat($row.find('.foodCarb').val() || $row.find('.foodCarb').text()) * volumePercent),
+            boardFoodProtein: (parseFloat($row.find('.foodProtein').val() || $row.find('.foodProtein').text()) * volumePercent),
+            boardFoodFat: (parseFloat($row.find('.foodFat').val() || $row.find('.foodFat').text()) * volumePercent)
         };
       console.log($row.find('.foodName').val());
       console.log(foodDataDto);
@@ -66,7 +66,7 @@ $(document).ready(function() {
             contentType: "application/json; charset=utf-8",
             success: function(response) {
                 console.log("성공")
-                window.close();
+                //window.close();
             },
             error: function(error) {
                 alert(error.responseText);

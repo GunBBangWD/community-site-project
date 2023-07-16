@@ -1,6 +1,7 @@
 package com.blue.bluearchive.board.dto;
 
 import com.blue.bluearchive.admin.entity.Category;
+import com.blue.bluearchive.board.dto.formDto.food.FoodDataDto;
 import com.blue.bluearchive.board.entity.Board;
 import com.blue.bluearchive.member.entity.Member;
 import lombok.Data;
@@ -22,6 +23,9 @@ public class BoardFormDto {
     private Category category;
 
     private Member member_idx;
+
+//    private List<FoodDataDto> foodDataDtoList = new ArrayList<>();
+
     private List<BoardImgDto> boardImgDtoList = new ArrayList<>();
 
     private List<Integer> boardImgIds = new ArrayList<>();

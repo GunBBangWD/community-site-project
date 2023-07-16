@@ -16,6 +16,8 @@ public class BoardFoodImg {
 
     @Column(name = "board_food_img_url", length = 200, nullable = false)
     private String boardFoodImgUrl;
+    private String imgName; //이미지 파일명
+    private String oriImgName; //원본 이미지 파일명
 
     @ManyToOne
     @JoinColumn(name = "board_food_id")

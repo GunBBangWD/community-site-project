@@ -4,4 +4,6 @@ import com.blue.bluearchive.board.entity.formEntity.food.BoardFood;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BoardFoodRepository extends JpaRepository<BoardFood,Integer> {
+
+    BoardFood findByBoard_BoardId(int boardId);
 }

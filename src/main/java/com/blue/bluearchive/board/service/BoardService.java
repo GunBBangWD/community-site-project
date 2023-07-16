@@ -170,21 +170,17 @@ public class BoardService {
     }
 
 
-    public Integer saveBoard(BoardFormDto boardFormDto, List<MultipartFile> boardImgFileList) throws Exception {
+    public Board saveBoard(BoardFormDto boardFormDto, List<MultipartFile> boardImgFileList) throws Exception {
         Board board = boardFormDto.createBoard();
-        boardRepository.save(board);
-
+        board = boardRepository.save(board);
         if (boardImgFileList != null) {
             System.out.println("==============보드저장 직후 if진입===============");
             saveBoardImages(board, boardImgFileList);
         }
-
-        return board.getBoardId();
+        return board;
     }
     public void saveBoardImages(Board board, List<MultipartFile> boardImgFileList) throws Exception {
-        System.out.println("============saveBoardImages 메서드 진입============");
         for (int i = 0; i < boardImgFileList.size(); i++) {
-            System.out.println("============saveBoardImages 메서드 포문 진입============");
             BoardImg boardImg = new BoardImg();
             boardImg.setBoard(board);
             

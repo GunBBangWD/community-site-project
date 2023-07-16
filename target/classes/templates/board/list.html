@@ -59,7 +59,6 @@
         <div class="col-md-4 text-center h3">
           <a href="#">현재 카테고리이름 표시</a>
         </div>
-
       </div>
 
       <div class="col-10">
@@ -115,8 +114,6 @@
               <span th:text="'['+${board.category.categoryName}+']'"></span>
               <a th:href="'/board/Detail/' + ${board.boardId}" th:text="${board.boardTitle}"></a>
               <span th:if="${board.commentCount > 0}" th:text="'['+${board.commentCount}+']'"></span>
-
-
             </div>
 
 
