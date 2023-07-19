@@ -9,4 +9,5 @@ import java.util.List;
 
 public interface BoardFoodImgRepository extends JpaRepository<BoardFoodImg, Integer> {
     List<BoardFoodImg> findByBoardFood(BoardFood boardFood);
+    BoardFoodImg findByBoardFoodImgUrl(String boardFoodImgUrl);
 }

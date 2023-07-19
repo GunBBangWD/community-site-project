@@ -86,11 +86,13 @@ public class BoardService {
                 boardRepository.save(board);
             }
         }
-        public Integer updateBoard(BoardFormDto boardFormDto,List<String>boardImgUrlList,List<MultipartFile> boardImgFileList)throws Exception{
 
+
+
+        public Board updateBoard(BoardFormDto boardFormDto,List<String>boardImgUrlList,List<MultipartFile> boardImgFileList)throws Exception{
         Board board = boardRepository.findById(boardFormDto.getBoardId()).orElseThrow(EntityNotFoundException::new);
              board.updateBoard(boardFormDto);
-             boardRepository.save(board);
+            boardRepository.save(board);
              List<BoardImg> boardImg = boardImgRepository.findByBoardBoardIdOrderByBoardImgIdAsc(boardFormDto.getBoardId());
             List<String>boardImgUrl = new ArrayList<>();
             for(BoardImg imgUrl:boardImg){
@@ -109,23 +111,18 @@ public class BoardService {
 
             for (String imageUrl : imagesToDelete) {
                 BoardImg deletedImg = boardImgRepository.findByBoardImgUrl(imageUrl);
-
                 if (deletedImg != null) {
                     System.out.println(deletedImg.getBoardImgId());
                     // 필요한 작업 수행
                     boardImgRepository.delete(deletedImg);
                 }
-
             }
-
-
-
             if (boardImgFileList != null) {
                saveBoardImages(board,boardImgFileList);
             }
 
 
-        return board.getBoardId();
+        return board;
         }
 
     public void incrementBoardCount(int boardId) {

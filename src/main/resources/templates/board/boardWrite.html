@@ -119,7 +119,6 @@
 
     // 썸네일 클릭시 삭제
     function fileRemove(index, viewArea) {
-
       var imgId = viewArea + index;
       console.log("삭제 진입", imgId);
       var thumbnail = document.getElementById(imgId);
@@ -133,11 +132,9 @@
           break;
         }
       }
-
       if (fileIndex !== -1) {
         fileInfoArr.splice(fileIndex, 1);
       }
-
       console.log(fileInfoArr); // 남아있는 파일 목록 출력
     }
 
@@ -259,7 +256,12 @@
       if (fileInfoArr.length > 0) {
         for (var i = 0; i < fileInfoArr.length; i++) {
           var file = fileInfoArr[i].file;
-          var imgId = fileInfoArr[i].imgId;
+          if(fileInfoArr[i].imgListType=='boardImgFile'){
+            hasBoardImgFile=true;
+          }
+          if(fileInfoArr[i].imgListType=='foodImgFile'){
+            hasFoodImgFile=true;
+          }
           formData.append(fileInfoArr[i].imgListType, file);
         }
       }
@@ -294,6 +296,43 @@
 
 
     function sendEditData() {
+        var formData = new FormData();
+
+      // 전송 부분 건희 추가 시작
+      var foodDataDtoList = [];
+      $('#foodList .row').each(function () {
+        // 현재 row
+        var $row = $(this);
+        // 현재 row의 데이터를 JavaScript 객체로 변환
+        var foodDataDto = {
+          boardFoodName: $row.find('.boardFoodName').text(),
+          boardFoodVolume: parseFloat($row.find('.boardFoodVolume').text()),
+          boardFoodKcal: parseFloat($row.find('.boardFoodKcal').text()),
+          boardFoodCarb: parseFloat($row.find('.boardFoodCarb').text()),
+          boardFoodProtein: parseFloat($row.find('.boardFoodProtein').text()),
+          boardFoodFat: parseFloat($row.find('.boardFoodFat').text())
+        };
+        if ($row.find('.boardFoodName').length > 0) {
+          // 배열에 추가
+          foodDataDtoList.push(foodDataDto);
+        }
+
+      });
+
+      var foodFormDto = {
+        totalVolume: parseFloat($("#totalVolume").text()),
+        totalKcal: parseFloat($("#totalKcal").text()),
+        totalCarb: parseFloat($("#totalCarb").text()),
+        totalProtein: parseFloat($("#totalProtein").text()),
+        totalFat: parseFloat($("#totalFat").text())
+      };
+
+      formData.append('foodFormDtoJson', JSON.stringify(foodFormDto));
+      formData.append('foodDataDtoListJson', JSON.stringify(foodDataDtoList));
+      // 건희 추가 끝
+
+
+
       var memberIdx = document.getElementsByName('member_idx')[0].value;
       var category = document.getElementById('category').value;
       var boardTitle = document.getElementById('boardTitle').value;
@@ -301,7 +340,7 @@
       var boardId = document.getElementById('boardId').value;
 
 
-      var formData = new FormData();
+
       formData.append('member_idx', memberIdx);
       formData.append('boardTitle', boardTitle);
       formData.append('boardContent', boardContent);
@@ -310,18 +349,32 @@
 
 
       // fileInfoArr 배열에 있는 파일 정보를 formData에 추가
+
+      // fileInfoArr 배열에 있는 파일 정보가 없는경우를 구별하기위한 변수
+      var hasBoardImgFile = false;
+      var hasFoodImgFile = false;
+
       if (fileInfoArr.length > 0) {
         for (var i = 0; i < fileInfoArr.length; i++) {
           var file = fileInfoArr[i].file;
           if (typeof file === 'string') {
-            formData.append('boardImgUrl', file); // 문자열인 경우 URL 값을 추가
+            formData.append(fileInfoArr[i].imgListType+'Url', file); // 문자열인 경우 URL 값을 추가
           } else if (file instanceof File) {
-            formData.append('boardImgFile', file); // File 객체인 경우 파일 그 자체를 추가
+            if(fileInfoArr[i].imgListType=='boardImgFile'){
+              hasBoardImgFile=true;
+            }
+            if(fileInfoArr[i].imgListType=='foodImgFile'){
+              hasFoodImgFile=true;
+            }
+            formData.append(fileInfoArr[i].imgListType, file); // File 객체인 경우 파일 그 자체를 추가
           }
         }
-      } else {
-        // 사진이 없는 경우에 대한 처리
-        formData.append('boardImgUrl', ''); // 빈 값을 추가
+      }
+      if (!hasBoardImgFile) {
+        formData.append('boardImgFile', ''); // 빈 값을 추가
+      }
+      if (!hasFoodImgFile) {
+        formData.append('foodImgFileList', ''); // 빈 값을 추가
       }
 
 
@@ -598,6 +651,30 @@
                 </div>
               </div>
 
+              <div class="row justify-content-center" th:each="foodList : ${boardFoodDto.foodPartDtoList}">
+                <div class="col-2 text-center boardFoodName " th:text="${foodList.boardFoodName}">
+                  음식명
+                </div>
+                <div class="col-1 text-center boardFoodVolume " th:text="${foodList.boardFoodVolume}+'g'">
+                  용량 (g)
+                </div>
+                <div class="col-1 text-center boardFoodKcal " th:text="${foodList.boardFoodKcal}+'kcal'">
+                  칼로리 (kal)
+                </div>
+                <div class="col-1 text-center boardFoodCarb " th:text="${foodList.boardFoodCarb}+'g'">
+                  탄수화물 (g)
+                </div>
+                <div class="col-1 text-center boardFoodProtein " th:text="${foodList.boardFoodProtein}+'g'">
+                  단백질 (g)
+                </div>
+                <div class="col-1 text-center boardFoodFat " th:text="${foodList.boardFoodFat}+'g'">
+                  지방 (g)
+                </div>
+                <div class="col-1 text-center">
+                  <button onclick="removeFood()" class="btn btn-secondary">X</button>
+                </div>
+              </div>
+
               <div class="row">
                 <div class="col-12 text-center">
                   <button id="addFood">음식 추가</button>
@@ -613,23 +690,23 @@
               총 성분표
               <div class="row">
                 <div class="col-6">총 용량 (g)</div>
-                <div class="col-6" id="totalVolume">0.0g</div>
+                <div class="col-6" id="totalVolume" th:text="${boardFoodDto.totalVolume != null ? boardFoodDto.totalVolume : '0.0'}+'g'">0.0g</div>
               </div>
               <div class="row">
                 <div class="col-6">총 칼로리 (kal)</div>
-                <div class="col-6" id="totalKcal">0.0kal</div>
+                <div class="col-6" id="totalKcal" th:text="${boardFoodDto.totalKcal != null ? boardFoodDto.totalKcal : '0.0'}+'kcal'">0.0kal</div>
               </div>
               <div class="row">
                 <div class="col-6">총 탄수화물 (g)</div>
-                <div class="col-6" id="totalCarb">0.0g</div>
+                <div class="col-6" id="totalCarb" th:text="${boardFoodDto.totalCarb != null ? boardFoodDto.totalCarb : '0.0'}+'g'">0.0g</div>
               </div>
               <div class="row">
                 <div class="col-6">총 단백질 (g)</div>
-                <div class="col-6" id="totalProtein">0.0g</div>
+                <div class="col-6" id="totalProtein" th:text="${boardFoodDto.totalProtein != null ? boardFoodDto.totalProtein : '0.0'}+'g'">0.0g</div>
               </div>
               <div class="row">
                 <div class="col-6">총 지방 (g)</div>
-                <div class="col-6" id="totalFat">0.0g</div>
+                <div class="col-6" id="totalFat" th:text="${boardFoodDto.totalFat != null ? boardFoodDto.totalFat : '0.0'}+'g'">0.0g</div>
               </div>
             </div>
 

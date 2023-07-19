@@ -144,7 +144,6 @@ $(document).ready(function() {
               사진공간 사진추가 공간
               <div class="row">
                 <div class="col-3" th:each="foodImg:${boardFoodDto.foodImgDtoList}" style="text-align: center" >
-                  <span th:text="${foodImg.boardFoodImgUrl}"></span>
                   <img th:src="${foodImg.boardFoodImgUrl}" class="rounded mgb-15" width="200">
                 </div>
               </div>

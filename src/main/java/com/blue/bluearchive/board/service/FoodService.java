@@ -112,23 +112,78 @@ public class FoodService {
 
     @Transactional(readOnly = false)
     public void saveFoodImg(BoardFood boardFood, List<MultipartFile> boardImgFile) throws Exception{
-        for (MultipartFile file : boardImgFile){
-            BoardFoodImg foodImg = new BoardFoodImg();
-            foodImg.setBoardFood(boardFood);
+        System.out.println("멀티파일 부분 돌아가는중");
+        if (boardImgFile!=null) {
+            for (MultipartFile file : boardImgFile) {
+                System.out.println("멀티파일 부분 돌아가는중");
+                BoardFoodImg foodImg = new BoardFoodImg();
+                foodImg.setBoardFood(boardFood);
 
-            String oriImgName=file.getOriginalFilename();
-            String imgName="";
-            String imgUrl="";
+                String oriImgName = file.getOriginalFilename();
+                String imgName = "";
+                String imgUrl = "";
 
-            if(!StringUtils.isEmpty(oriImgName)){
-                imgName=fileService.uploadFile(ImgLocation,oriImgName, file.getBytes());
-                imgUrl="/images/board/"+imgName;
+                if (!StringUtils.isEmpty(oriImgName)) {
+                    imgName = fileService.uploadFile(ImgLocation, oriImgName, file.getBytes());
+                    imgUrl = "/images/board/" + imgName;
+                }
+                //상품 이미지 정보 저장
+                foodImg.setOriImgName(oriImgName);
+                foodImg.setImgName(imgName);
+                foodImg.setBoardFoodImgUrl(imgUrl);
+                boardFoodImgRepository.save(foodImg);
             }
-            //상품 이미지 정보 저장
-            foodImg.setOriImgName(oriImgName);
-            foodImg.setImgName(imgName);
-            foodImg.setBoardFoodImgUrl(imgUrl);
-            boardFoodImgRepository.save(foodImg);
         }
     }
+
+    @Transactional(readOnly = false)
+    public BoardFood updateFoodImg(Board board, List<String> foodImgUrlList, FoodFormDto foodFormDto){
+        BoardFood boardFood = boardFoodRepository.findByBoard(board);
+        List<BoardFoodImg> boardImg = boardFoodImgRepository.findByBoardFood(boardFood);
+        List<String>boardImgUrl = new ArrayList<>();
+        for(BoardFoodImg imgUrl:boardImg){
+            boardImgUrl.add(imgUrl.getBoardFoodImgUrl());
+        }
+        List<String> imagesToDelete = new ArrayList<>();
+        for (String imgUrl : boardImgUrl) {
+            if (!foodImgUrlList.contains(imgUrl)) {
+                imagesToDelete.add(imgUrl);
+                System.out.println(imgUrl);
+                System.out.println("여깅");
+            }
+        }
+        for (String imageUrl : imagesToDelete) {
+            BoardFoodImg deletedImg = boardFoodImgRepository.findByBoardFoodImgUrl(imageUrl);
+            if (deletedImg != null) {
+                System.out.println(deletedImg.getImgName());
+                // 필요한 작업 수행
+                try {
+                    fileService.deleteFile(imageUrl);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                boardFoodImgRepository.delete(deletedImg);
+            }
+        }
+
+        boardFood.updateFood(foodFormDto);
+        boardFood.setBoard(board);
+        boardFoodRepository.save(boardFood);
+        return boardFood;
+    }
+    @Transactional(readOnly = false)
+    public void updateFoodPart(BoardFood boardFood, List<FoodDataDto> foodDataDtoList){
+        boardFoodPartRepository.deleteByBoardFood(boardFood);
+        List<BoardFoodPart> boardFoodPartList = new ArrayList<>();
+        BoardFoodPart foodPart;
+        for (FoodDataDto foodDto : foodDataDtoList){
+            foodPart = modelMapper.map(foodDto,BoardFoodPart.class);
+            foodPart.setBoardFood(boardFood);
+            boardFoodPartList.add(foodPart);
+        }
+        boardFoodPartRepository.saveAll(boardFoodPartList);
+    }
+
+
+
 }

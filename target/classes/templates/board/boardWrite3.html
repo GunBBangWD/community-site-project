@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout1}">
 
 <head>
-<!--    <meta name="_csrf" th:content="${_csrf.token}"/>-->
-<!--    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>-->
+  <!--    <meta name="_csrf" th:content="${_csrf.token}"/>-->
+  <!--    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>-->
   <meta charset="UTF-8">
   <title>블루아카이브_write</title>
   <!-- CSS only -->
@@ -46,7 +45,7 @@
   </style>
 
   <script th:inline="javascript">
-
+    // 토글 체크
     function toggleForm(checkbox) {
       var formId = "form-" + checkbox.value;
       var form = document.getElementById(formId);
@@ -57,56 +56,79 @@
         form.style.display = "none";
       }
     }
-    var imgUrls = /*[[${imageUrls}]]*/ []; // 이미지 URL 배열
+
+    var foodImageUrls = /*[[${foodImageUrls}]]*/ []; // 이미지 URL 배열
+    for (var i = 0; i < foodImageUrls.length; i++) {
+      console.log(foodImageUrls[i].imgId, foodImageUrls[i].imgUrl);
+    }
+    var imgUrls = /*[[${imageUrls}]]*/[]; // 이미지 URL 배열
     var fileInfoArr = [];
-    window.addEventListener("load", function() {
-      var preview = document.getElementById('View_area');
+
+    function makeImg(imgUrls, elementId) {
+      console.log("진입");
+      console.log(imgUrls.length);
+      var preview = document.getElementById(elementId);
 
       for (var i = 0; i < imgUrls.length; i++) {
-        var thumbnailId = "thumbnail_" + i; // 썸네일 ID
-        var imageUrl = imgUrls[i];
-        fileInfoArr.push({
-          file: imageUrl,
-          thumbnailId: thumbnailId
-        });
+        var imgId = imgUrls[i].imgId; // 썸네일 ID
+        var imgUrl = imgUrls[i].imgUrl;
+        var imgListType = imgUrls[i].imgListType;
+        console.log("정보확인");
+        console.log(imgId);
+        console.log(imgUrl);
 
+        fileInfoArr.push({
+          file: imgUrl,
+          imgId: imgId + i,
+          imgListType: imgListType
+        });
         var thumbnail = document.createElement("div");
-        thumbnail.id = thumbnailId;
+        thumbnail.id = imgId + i;
         thumbnail.className = "thumbnail";
         preview.appendChild(thumbnail);
 
         var img = document.createElement("img");
         img.className = "addImg";
         img.classList.add("obj");
-        img.src = imageUrl;
+        img.src = imgUrl;
         thumbnail.appendChild(img);
 
         var deleteBtn = document.createElement("div");
         deleteBtn.className = "delete";
         deleteBtn.innerHTML = "X";
-        deleteBtn.onclick = (function (index) {
+        deleteBtn.onclick = (function (index, viewArea) {
           return function () {
-            fileRemove(index);
+            fileRemove(index, viewArea);
           };
-        })(i); // 현재 인덱스 값 전달
+        })(i,imgId); // 현재 인덱스 값 전달
         thumbnail.appendChild(deleteBtn);
-
-
+      }
+    }
+    window.addEventListener("load", function () {
+      if(imgUrls.length>0){
+        makeImg(imgUrls,'View_area');
+      }
+      if(foodImageUrls.length>0){
+        makeImg(foodImageUrls,foodImageUrls[0].imgId);
       }
     });
 
 
 
+
+
     // 썸네일 클릭시 삭제
-    function fileRemove(index) {
-      var thumbnailId = "thumbnail_" + index;
-      var thumbnail = document.getElementById(thumbnailId);
+    function fileRemove(index, viewArea) {
+
+      var imgId = viewArea + index;
+      console.log("삭제 진입", imgId);
+      var thumbnail = document.getElementById(imgId);
       thumbnail.parentNode.removeChild(thumbnail); // Remove the thumbnail element from its parent
 
       // fileInfoArr 배열에서 해당 파일을 검색하여 삭제
       var fileIndex = -1;
       for (var i = 0; i < fileInfoArr.length; i++) {
-        if (fileInfoArr[i].thumbnailId === thumbnailId) {
+        if (fileInfoArr[i].imgId === imgId) {
           fileIndex = i;
           break;
         }
@@ -119,6 +141,7 @@
       console.log(fileInfoArr); // 남아있는 파일 목록 출력
     }
 
+
     // 썸네일 미리보기
     function previewImage(targetObj, viewArea) {
       var files = targetObj.files;
@@ -127,10 +150,18 @@
 
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        var thumbnailId = "thumbnail_" + (i + (imgUrls ? imgUrls.length : 0)); // 썸네일 ID
+        var num = 0;
+        if(viewArea=='View_area'){
+          num=imgUrls.length;
+        }else if(viewArea=='foodImgFile'){
+          num=foodImageUrls.length;
+        }
+        var imgId = viewArea + (i + num); // 썸네일 ID
+        var imgListType = (viewArea == 'View_area') ? 'boardImgFile' : viewArea;
         fileInfoArr.push({
           file: file, // 파일 객체의 URL 생성
-          thumbnailId: thumbnailId, // 썸네일 ID 정보 추가
+          imgId: imgId, // 썸네일 ID 정보 추가
+          imgListType: imgListType
         });
 
         console.log(fileInfoArr);
@@ -139,7 +170,7 @@
         if (!file.type.match(imageType)) continue;
 
         var thumbnail = document.createElement("div");
-        thumbnail.id = thumbnailId;
+        thumbnail.id = imgId;
         thumbnail.className = "thumbnail";
         preview.appendChild(thumbnail);
 
@@ -153,11 +184,11 @@
         var deleteBtn = document.createElement("div");
         deleteBtn.className = "delete";
         deleteBtn.innerHTML = "X";
-        deleteBtn.onclick = (function (index) {
+        deleteBtn.onclick = (function (index, viewArea) {
           return function () {
-            fileRemove(index);
+            fileRemove(index, viewArea);
           };
-        })(i + (imgUrls ? imgUrls.length : 0)); // 현재 인덱스 값 전달
+        })(i + num, viewArea); // 현재 인덱스 값 전달
         thumbnail.appendChild(deleteBtn);
 
         if (window.FileReader) {
@@ -171,32 +202,73 @@
         }
       }
     }
+
+
     function sendData() {
+      var formData = new FormData();
+
+      // 전송 부분 건희 추가 시작
+      var foodDataDtoList = [];
+      $('#foodList .row').each(function () {
+        // 현재 row
+        var $row = $(this);
+        // 현재 row의 데이터를 JavaScript 객체로 변환
+        var foodDataDto = {
+          boardFoodName: $row.find('.boardFoodName').text(),
+          boardFoodVolume: parseFloat($row.find('.boardFoodVolume').text()),
+          boardFoodKcal: parseFloat($row.find('.boardFoodKcal').text()),
+          boardFoodCarb: parseFloat($row.find('.boardFoodCarb').text()),
+          boardFoodProtein: parseFloat($row.find('.boardFoodProtein').text()),
+          boardFoodFat: parseFloat($row.find('.boardFoodFat').text())
+        };
+        if ($row.find('.boardFoodName').length > 0) {
+          // 배열에 추가
+          foodDataDtoList.push(foodDataDto);
+        }
+
+      });
+
+      var foodFormDto = {
+        totalVolume: parseFloat($("#totalVolume").text()),
+        totalKcal: parseFloat($("#totalKcal").text()),
+        totalCarb: parseFloat($("#totalCarb").text()),
+        totalProtein: parseFloat($("#totalProtein").text()),
+        totalFat: parseFloat($("#totalFat").text())
+      };
+
+      formData.append('foodFormDtoJson', JSON.stringify(foodFormDto));
+      formData.append('foodDataDtoListJson', JSON.stringify(foodDataDtoList));
+      // 건희 추가 끝
+
+
       var memberIdx = document.getElementsByName('member_idx')[0].value;
       var category = document.getElementById('category').value;
       var boardTitle = document.getElementById('boardTitle').value;
       var boardContent = document.getElementById('boardContent').value;
 
-      var formData = new FormData();
+
       formData.append('member_idx', memberIdx);
       formData.append('boardTitle', boardTitle);
       formData.append('boardContent', boardContent);
-      formData.append('category',category);
-
-
+      formData.append('category', category);
 
       // fileInfoArr 배열에 있는 파일 정보를 formData에 추가
+      var hasBoardImgFile = false;
+      var hasFoodImgFile = false;
+
       if (fileInfoArr.length > 0) {
         for (var i = 0; i < fileInfoArr.length; i++) {
           var file = fileInfoArr[i].file;
-          formData.append('boardImgFile', file);
+          var imgId = fileInfoArr[i].imgId;
+          formData.append(fileInfoArr[i].imgListType, file);
         }
-      } else {
-        // 사진이 없는 경우에 대한 처리
+      }
+      if (!hasBoardImgFile) {
         formData.append('boardImgFile', ''); // 빈 값을 추가
       }
-
-
+      if (!hasFoodImgFile) {
+        formData.append('foodImgFileList', ''); // 빈 값을 추가
+      }
 
 
       // AJAX 요청
@@ -206,14 +278,16 @@
         data: formData,
         processData: false,
         contentType: false,
-        success: function(response) {
+        success: function (response) {
           alert("성공ㅋㅋ");
-          window.location.href = '/board/'+ category+'/0';
-
-
+          window.location.href = '/board/' + category + '/0';
         },
-        error: function(xhr, status, error) {
-         alert("실패ㅋㅋ");
+        error: function (xhr, status, error) {
+          console.error('Status: ', status);
+          console.error('Error: ', error);
+          console.error('Response: ', xhr.responseText);
+          alert("실패ㅋㅋ");
+
         }
       });
     }
@@ -226,12 +300,14 @@
       var boardContent = document.getElementById('boardContent').value;
       var boardId = document.getElementById('boardId').value;
 
+
       var formData = new FormData();
       formData.append('member_idx', memberIdx);
       formData.append('boardTitle', boardTitle);
       formData.append('boardContent', boardContent);
-      formData.append('category',category);
-      formData.append('boardId',boardId);
+      formData.append('category', category);
+      formData.append('boardId', boardId);
+
 
       // fileInfoArr 배열에 있는 파일 정보를 formData에 추가
       if (fileInfoArr.length > 0) {
@@ -251,22 +327,109 @@
 
       // AJAX 요청
       $.ajax({
-        url: '/board/Edit/'+boardId,
+        url: '/board/Edit/' + boardId,
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
-        success: function(response) {
+        success: function (response) {
           alert("성공ㅋㅋ");
           window.location.href = '/board/Detail/' + boardId;
-
-
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           alert("실패ㅋㅋ");
         }
       });
     }
+
+
+
+
+    //건희 추가부분
+
+    $(document).ready(function () {
+      $('#addFood').on('click', function () {
+        var win = window.open('/board/food/search', 'newWindow', 'width=1500, height=500'); //새창 열기
+        var timer = setInterval(function () { //setInterval == 일정시간마다 반복하는 함수
+          if (win.closed) {
+            clearInterval(timer);
+            console.log("다시 돌아옴");
+            fetchIngredientData(); //새 창이 닫힌 후 실행되는 함수
+          }
+        }, 500);
+      });
+
+    });
+
+    // 음식부분을 삭제하는 x버튼 이벤트
+    function removeFood() {
+      $(event.target).closest('.row').remove();
+    }
+
+    function fetchIngredientData() {
+      $.ajax({
+        url: "/board/food/data", //새 창에서 입력한 데이터를 불러오는 API
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+          var foodListData = `
+                <div class="row justify-content-center">
+                    <div class="col-2 text-center boardFoodName">
+                        ${data.boardFoodName}
+                    </div>
+                    <div class="col-1 text-center boardFoodVolume">
+                        ${data.boardFoodVolume}g
+                    </div>
+                    <div class="col-1 text-center boardFoodKcal">
+                        ${data.boardFoodKcal}kal
+                    </div>
+                    <div class="col-1 text-center boardFoodCarb">
+                        ${data.boardFoodCarb}g
+                    </div>
+                    <div class="col-1 text-center boardFoodProtein">
+                        ${data.boardFoodProtein}g
+                    </div>
+                    <div class="col-1 text-center boardFoodFat">
+                        ${data.boardFoodFat}g
+                    </div>
+                    <div class="col-1 text-center">
+                        <button onclick="removeFood()" class="btn btn-secondary">X</button>
+                    </div>
+                </div>
+            `;
+
+          // id를 가진 요소 아래에 새로운 ingredientRow 추가
+          $('#foodList').children(':eq(1)').after(foodListData);
+
+          // 각 성분표의 값 업데이트
+          // 각 행에서 숨겨진 입력 필드의 값을 가져와서 파싱하고, 검색 결과의 값만큼 증가
+          var totalVolume = parseFloat($("#totalVolume").text()) + parseFloat(data.boardFoodVolume);
+          var totalKcal = (parseFloat($("#totalKcal").text()) + parseFloat(data.boardFoodKcal)).toFixed(2);
+          var totalCarb = (parseFloat($("#totalCarb").text()) + parseFloat(data.boardFoodCarb)).toFixed(2);
+          var totalProtein = (parseFloat($("#totalProtein").text()) + parseFloat(data.boardFoodProtein)).toFixed(2);
+          var totalFat = (parseFloat($("#totalFat").text()) + parseFloat(data.boardFoodFat)).toFixed(2);
+
+          console.log(totalVolume);
+          console.log(totalKcal);
+          console.log(totalCarb);
+          console.log(totalProtein);
+          console.log(totalFat);
+
+          // 숨겨진 입력 필드와 텍스트 모두 업데이트
+          $("#totalVolume").text(totalVolume);
+          $("#totalKcal").text(totalKcal);
+          $("#totalCarb").text(totalCarb);
+          $("#totalProtein").text(totalProtein);
+          $("#totalFat").text(totalFat);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.log("실패함");
+        }
+      });
+    }
+
+
+//건희 추가 끝
 
   </script>
 
@@ -280,233 +443,308 @@
 
 <!-- 메인 부분 -->
 <div layout:fragment="content" class="content">
-<div class="container-fluid " style="margin-top: 40px;" th:object="${boardFormDto}">
-  <div class="row gx-0">
-    <div class="row">
-      <div class="col-md-4 text-center h3">
-        <a href="#">현재 카테고리이름 표시</a>
+  <div class="container-fluid " style="margin-top: 40px;" th:object="${boardFormDto}">
+    <div class="row gx-0">
+      <div class="row">
+        <div class="col-md-4 text-center h3">
+          <a href="#">현재 카테고리이름 표시</a>
+        </div>
+
       </div>
 
-    </div>
-
-    <div class="col-10">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <br><br><br>
-            먼가 넣을수도 있는 공간 또는 디자인을 위한 공백
-            <br><br><br>
+      <div class="col-10">
+        <div class="container">
+          <div class="row">
+            <div class="col-12 text-center">
+              <br><br><br>
+              먼가 넣을수도 있는 공간 또는 디자인을 위한 공백
+              <br><br><br>
+            </div>
           </div>
-        </div>
-          <input type="hidden"  name="member_idx" th:value="${#authentication.principal.idx}">
+          <input type="hidden" name="member_idx" th:value="${#authentication.principal.idx}">
           <input type="hidden" name="boardId" th:field="*{boardId}">
 
-        <div class="row">
-          <div class="h4 col-2 text-center">
-            작성위치
+          <div class="row">
+            <div class="h4 col-2 text-center">
+              작성위치
+            </div>
+            <div class="col-10" th:if="${boardFormDto.category == null}">
+              <select name="category" id="category">
+                <option th:each="category : ${categoryList}" th:value="${category.categoryId}"
+                        th:text="${category.categoryName}"></option>
+              </select>
+            </div>
+            <div class="col-10" th:if="${boardFormDto.category != null}">
+              <select name="category" id="category">
+                <option th:each="category : ${categoryList}" th:value="${category.categoryId}"
+                        th:text="${category.categoryName}" th:selected="${category.categoryId} == ${selectCategoryId}">
+                </option>
+              </select>
+            </div>
           </div>
-          <div class="col-10" th:if="${boardFormDto.category == null}">
-            <select name="category" id="category">
-              <option th:each="category : ${categoryList}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
-            </select>
-          </div>
-          <div class="col-10" th:if="${boardFormDto.category != null}">
-            <select name="category" id="category">
-              <option th:each="category : ${categoryList}" th:value="${category.categoryId}" th:text="${category.categoryName}" th:selected="${category.categoryId} == ${selectCategoryId}"></option>
-            </select>
-          </div>
-        </div>
 
-        <div class="row">
-          <div class="h4 col-2 text-center">
-            양식
-          </div>
-          <div class="h4 col-2 text-center">
-            <input type="checkbox" id="운동 기록" name="categories" value="1" onclick="toggleForm(this)">운동 기록
-
-          </div>
-          <div class="h4 col-2 text-center">
-            <input type="checkbox" id="몸매 변화" name="categories" value="2" onclick="toggleForm(this)">몸매 변화
-          </div>
-          <div class="h4 col-2 text-center">
-
-            <input type="checkbox" id="식단 공유" name="categories" value="3" onclick="toggleForm(this)">식단 공유
-
-          </div>
-          <div class="h4 col-2 text-center">
-
-            <input type="checkbox" id="운동 장소" name="categories" value="4" onclick="toggleForm(this)">운동 장소
-          </div>
-        </div>
-        <input type="hidden" th:field="*{boardId}">
-        <div class="row">
-          <div class="h4 col-2 text-center">
-            제목
-          </div>
-          <div class="col-10 text-center" >
-            <input type="text" class="form-control" name="boardTitle" th:field="*{boardTitle}"/>
-          </div>
-        </div>
-
-
-        <div class="row" id="form-1" style="display: none">
-          <div class="h3 col-12 p-2">
-            운동 기록 작성 예시
-          </div>
-          <div class="col-2 align-self-center" style="height: 300px;">
-            <form id="fileUploadActivityForm">
-              <input type="file" name="files" id="fileInputActivity" multiple>
-            </form>
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            운동 종류 키워드 검색 (csv 데이터 활용) <br> 운동 시간 입력
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            소모 칼로리 제공
-          </div>
-        </div>
-        <div class="row" id="form-2" style="display: none">
-          <div class="h3 col-12 p-2">
-            몸매변화 예시
-          </div>
-          <div class="col-2 align-self-center" style="height: 300px;">
-            <form id="fileUploadBodyForm">
-              <input type="file" name="files" id="fileInputBody" multiple>
-            </form>
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            과정 설명, 시간 등등
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            After 사진들, 유튜브 링크
-          </div>
-        </div>
-
-
-
-        <div class="row" id="form-3" style="display: none">
-          <div class="h3 col-12 p-2">
-            식단 공유 예시
-          </div>
-          <div class="col-2 align-self-center" style="height: 300px;">
-            <form id="fileUploadFoodForm">
-              <input type="file" name="files" id="fileInputFood" multiple>
-            </form>
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            식단 + 재료별 키워드 검색하여 작성  <br> (식품데이터 api 활용)
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            식단 영양성분, 칼로리 계산되어 제공
-          </div>
-        </div>
-
-        <div class="row" id="form-4" style="display: none">
-          <div class="h3 col-12 p-2">
-            운동 장소 예시
-          </div>
-          <div class="col-2 align-self-center" style="height: 300px;">
-            <form id="fileUploadPlaceForm">
-              <input type="file" name="files" id="fileInputPlace" multiple>
-            </form>
-          </div>
-          <div class="col-2  offset-2 align-self-center" style="height: 300px;">
-            주소 입력 (네이버 주소검색 api)
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="h3 col-12 p-2">
-            내용
-          </div>
-          <div class="col-12 p-4">
-            <textarea name="boardContent" id="boardContent" class="form-control" rows="12" th:field="*{boardContent}"></textarea>
-          </div>
-        </div>
-        <div class="row" style="height: 100px;">
-
-          <div class="col-2 offset-5 p-4" th:if="${#strings.isEmpty(boardFormDto.boardTitle)}">
-            <button type="button" class="btn btn-outline-secondary btn-lg" onclick="sendData()">저장</button>
-          </div>
-          <div class="col-2 offset-5 p-4" th:unless="${#strings.isEmpty(boardFormDto.boardTitle)}">
-            <button  type="submit" class="btn btn-outline-secondary btn-lg" onclick="sendEditData()">수정</button>
-          </div>
-          <div class="col-2 p-4">
-            <a href="board/list.html" class="btn btn-outline-secondary btn-lg">취소</a>
-          </div>
-        </div>
-
-
-
-      </div>
-    </div>
-  </div>
-</div>
-            <div style="display: inline;">
-              <label for="img_upload">
-                <img src="/img/photo_add.jpg" style="width:100px; height:100px; cursor: pointer;">
-
-              </label>
-              <input type="file" name="img_upload" id="img_upload" style="display: none" multiple accept="image/*" onchange="previewImage(this,'View_area')">
-              <span id='View_area' style='position:relative; color: black; border: 0px solid black;'>
-              </span>
+          <div class="row">
+            <div class="h4 col-2 text-center">
+              양식
+            </div>
+            <div class="h4 col-2 text-center">
+              <input type="checkbox" id="운동 기록" name="categories" value="1" onclick="toggleForm(this)">운동 기록
 
             </div>
+            <div class="h4 col-2 text-center">
+              <input type="checkbox" id="몸매 변화" name="categories" value="2" onclick="toggleForm(this)">몸매 변화
+            </div>
+            <div class="h4 col-2 text-center">
+
+              <input type="checkbox" id="식단 공유" name="categories" value="3" onclick="toggleForm(this)">식단 공유
+
+            </div>
+            <div class="h4 col-2 text-center">
+
+              <input type="checkbox" id="운동 장소" name="categories" value="4" onclick="toggleForm(this)">운동 장소
+            </div>
+          </div>
+          <input type="hidden" th:field="*{boardId}">
+          <div class="row">
+            <div class="h4 col-2 text-center">
+              제목
+            </div>
+            <div class="col-10 text-center">
+              <input type="text" class="form-control" name="boardTitle" th:field="*{boardTitle}" />
+            </div>
+          </div>
+
+
+          <div class="row" id="form-1" style="display: none">
+            <div class="h3 col-12 p-2">
+              운동 기록 작성 예시
+            </div>
+            <div class="col-2 align-self-center" style="height: 300px;">
+              <form id="fileUploadActivityForm">
+                <input type="file" name="files" id="fileInputActivity" multiple>
+              </form>
+            </div>
+            <div class="col-2  offset-2 align-self-center" style="height: 300px;">
+              운동 종류 키워드 검색 (csv 데이터 활용) <br> 운동 시간 입력
+            </div>
+            <div class="col-2  offset-2 align-self-center" style="height: 300px;">
+              소모 칼로리 제공
+            </div>
+          </div>
+          <div class="row" id="form-2" style="display: none">
+            <div class="h3 col-12 p-2">
+              몸매변화 예시
+            </div>
+            <div class="col-2 align-self-center" style="height: 300px;">
+              <form id="fileUploadBodyForm">
+                <input type="file" name="files" id="fileInputBody" multiple>
+              </form>
+            </div>
+            <div class="col-2  offset-2 align-self-center" style="height: 300px;">
+              과정 설명, 시간 등등
+            </div>
+            <div class="col-2  offset-2 align-self-center" style="height: 300px;">
+              After 사진들, 유튜브 링크
+            </div>
+          </div>
+
+
+
+
+
+
+
+          <div class="row" id="form-3" style="display:">
+            <div class="h3 col-12 p-2">
+              식단 공유 예시
+            </div>
+            <div class="col-12 align-self-center" style="">
+              <label for="img_food">
+                <img src="/img/photo_add.jpg" style="width:100px; height:100px; cursor: pointer;">
+              </label>
+              <input type="file" name="img_food" id="img_food" style="display: none" multiple accept="image/*"
+                     onchange="previewImage(this,'foodImgFile')">
+              <span id="foodImgFile" style='position:relative; color: black; border: 0px solid black;'></span>
+              사진공간 사진추가 공간
+            </div>
+            <div id="foodList" class="col-9" style="min-height: 300px;">
+              <div class="row">
+                <div class="col-12 text-center">
+                  식단 + 음식별 키워드 검색하여 작성
+                </div>
+              </div>
+
+              <div class="row justify-content-center">
+                <div class="col-2 text-center">
+                  음식명
+                </div>
+                <div class="col-1 text-center">
+                  용량 (g)
+                </div>
+                <div class="col-1 text-center">
+                  칼로리 (kal)
+                </div>
+                <div class="col-1 text-center">
+                  탄수화물 (g)
+                </div>
+                <div class="col-1 text-center">
+                  단백질 (g)
+                </div>
+                <div class="col-1 text-center">
+                  지방 (g)
+                </div>
+                <div class="col-1 text-center">
+                  삭제
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12 text-center">
+                  <button id="addFood">음식 추가</button>
+                </div>
+              </div>
+
+
+            </div>
+
+
+
+            <div class="col-3" style="height: 300px;">
+              총 성분표
+              <div class="row">
+                <div class="col-6">총 용량 (g)</div>
+                <div class="col-6" id="totalVolume">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 칼로리 (kal)</div>
+                <div class="col-6" id="totalKcal">0.0kal</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 탄수화물 (g)</div>
+                <div class="col-6" id="totalCarb">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 단백질 (g)</div>
+                <div class="col-6" id="totalProtein">0.0g</div>
+              </div>
+              <div class="row">
+                <div class="col-6">총 지방 (g)</div>
+                <div class="col-6" id="totalFat">0.0g</div>
+              </div>
+            </div>
+
+          </div>
+
+
+
+
+
+
+
+          <div class="row" id="form-4" style="display: none">
+            <div class="h3 col-12 p-2">
+              운동 장소 예시
+            </div>
+            <div class="col-2 align-self-center" style="height: 300px;">
+              <form id="fileUploadPlaceForm">
+                <input type="file" name="files" id="fileInputPlace" multiple>
+              </form>
+            </div>
+            <div class="col-2  offset-2 align-self-center" style="height: 300px;">
+              주소 입력 (네이버 주소검색 api)
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="h3 col-12 p-2">
+              내용
+            </div>
+            <div class="col-12 p-4">
+              <textarea class="form-control" rows="12" th:field="*{boardContent}"></textarea>
+            </div>
+          </div>
+          <div class="row" style="height: 100px;">
+
+            <div class="col-2 offset-5 p-4" th:if="${#strings.isEmpty(boardFormDto.boardTitle)}">
+              <button type="button" class="btn btn-outline-secondary btn-lg" onclick="sendData()">저장</button>
+            </div>
+            <div class="col-2 offset-5 p-4" th:unless="${#strings.isEmpty(boardFormDto.boardTitle)}">
+              <button type="submit" class="btn btn-outline-secondary btn-lg" onclick="sendEditData()">수정</button>
+            </div>
+            <div class="col-2 p-4">
+              <a href="board/list.html" class="btn btn-outline-secondary btn-lg">취소</a>
+            </div>
+          </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display: inline;">
+    <label for="img_upload">
+      <img src="/img/photo_add.jpg" style="width:100px; height:100px; cursor: pointer;">
+    </label>
+    <input type="file" name="img_upload" id="img_upload" style="display: none" multiple accept="image/*"
+           onchange="previewImage(this,'View_area')">
+    <span id='View_area' style='position:relative; color: black; border: 0px solid black;'></span>
+  </div>
 </div>
 
 
 
 
 
-    <!-- 사이드메뉴 부분 -->
-    <div class="col-2">
-      <div class="container-fluid" style="border: 1px solid black;">
+<!-- 사이드메뉴 부분 -->
+<div class="col-2">
+  <div class="container-fluid" style="border: 1px solid black;">
 
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리1</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리2</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리3</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리4</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리5</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리6</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리7</a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12 text-center side_menu">
-            <a href="#">카테고리8</a>
-          </div>
-        </div>
-
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리1</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리2</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리3</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리4</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리5</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리6</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리7</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center side_menu">
+        <a href="#">카테고리8</a>
       </div>
     </div>
 
   </div>
+</div>
+
+</div>
 </div>
 
 

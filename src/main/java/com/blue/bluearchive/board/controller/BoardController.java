@@ -5,14 +5,16 @@ import com.blue.bluearchive.admin.dto.CategoryDto;
 import com.blue.bluearchive.admin.entity.Category;
 import com.blue.bluearchive.board.dto.*;
 import com.blue.bluearchive.board.dto.formDto.ImgDto;
-import com.blue.bluearchive.board.dto.formDto.food.BoardFoodDto;
-import com.blue.bluearchive.board.dto.formDto.food.FoodEditDto;
-import com.blue.bluearchive.board.dto.formDto.food.FoodImgDto;
+import com.blue.bluearchive.board.dto.formDto.food.*;
 import com.blue.bluearchive.board.entity.Board;
+import com.blue.bluearchive.board.entity.formEntity.food.BoardFood;
 import com.blue.bluearchive.board.repository.BoardRepository;
 import com.blue.bluearchive.board.service.*;
 import com.blue.bluearchive.member.dto.CustomUserDetails;
 import com.blue.bluearchive.member.repository.MemberRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.jni.FileInfo;
 import org.modelmapper.ModelMapper;
@@ -150,18 +152,14 @@ public class BoardController {
         try{
             List<CategoryDto> categoryList = categoryService.getAllCategory();
             model.addAttribute("categoryList", categoryList);
-
             BoardFormDto boardFormDto= boardService.getBoardImgById(boardId);
             //카테고리 선택 추가
             int selectCategoryId= boardFormDto.getCategory().getCategoryId();
             model.addAttribute("selectCategoryId",selectCategoryId);
             model.addAttribute("boardFormDto",boardFormDto);
 
-            List<BoardImgDto> imageList = boardFormDto.getBoardImgDtoList(); // 이미지 목록을 가져온다고 가정합니다.
-            List<String> imageUrls = new ArrayList<>();
-            List<ImgDto> imgDtoList = new ArrayList<>();
+            //건희 추가 시작
             List<ImgDto> foodImgList = new ArrayList<>();
-            //건희 추가
             BoardFoodDto boardFoodDto = foodService.getFoodData(boardId);
             FoodEditDto foodEditDto = modelMapper.map(boardFoodDto,FoodEditDto.class);
             System.out.println("==================수정중==============");
@@ -175,6 +173,11 @@ public class BoardController {
                 foodImgList.add(foodImgDto);
             }
             model.addAttribute("foodImageUrls", foodImgList); // 이미지 URL 목록을 모델에 추가하여 View로 전달합니다.
+            //건희 추가 끝
+
+            //기존코드 수정
+            List<BoardImgDto> imageList = boardFormDto.getBoardImgDtoList(); // 이미지 목록을 가져온다고 가정합니다.
+            List<ImgDto> imgDtoList = new ArrayList<>();
             for (BoardImgDto image : imageList) {
                 ImgDto imgDto = new ImgDto();
                 imgDto.setImgUrl(image.getBoardImgUrl());
@@ -183,10 +186,7 @@ public class BoardController {
                 imgDtoList.add(imgDto); // 이미지 URL 정보를 가져온다고 가정합니다.
                 System.out.println(imgDto);
             }
-
             model.addAttribute("imageUrls", imgDtoList); // 이미지 URL 목록을 모델에 추가하여 View로 전달합니다.
-
-
 
         }catch (EntityNotFoundException e){
             model.addAttribute("errorMessage","오류");
@@ -196,20 +196,49 @@ public class BoardController {
     }
     @PostMapping(value = "/board/Edit/{boardId}")
     public String boardUpdate(BoardFormDto boardFormDto,BindingResult bindingResult
+            ,@RequestParam(value = "foodFormDtoJson",required = false)String  foodFormDtoJson  // 건희 추가
+            ,@RequestParam(value = "foodDataDtoListJson",required = false)String foodDataDtoListJson // 건희 추가
+            ,@RequestParam(value = "foodImgFile",required = false)List<MultipartFile>foodImgFileList // 건희 추가
+            ,@RequestParam(value = "foodImgFileUrl",required = false)List<String>foodImgUrlList //건희 추가
             ,@RequestParam(value = "boardImgFile",required = false)List<MultipartFile>boardImgFileList
-            ,@RequestParam(value = "boardImgUrl",required = false)List<String>boardImgUrlList,Model model){
-
+            ,@RequestParam(value = "boardImgFileUrl",required = false)List<String>boardImgUrlList,Model model){
         if(bindingResult.hasErrors()){
             return "board/boardWrite";
         }
+        //건희 추가 시작
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<FoodDataDto> foodDataDtoList = null;
+        FoodFormDto foodFormDto = null;
+        try {
+            foodDataDtoList = objectMapper.readValue(foodDataDtoListJson, new TypeReference<List<FoodDataDto>>(){});
+            foodFormDto = objectMapper.readValue(foodFormDtoJson, new TypeReference<FoodFormDto>(){});
+            System.out.println("멀티파이 출력 =========="+foodImgFileList);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("수정 포스트 진입 ===========");
+        System.out.println("리스트 내용 ==========="+foodDataDtoList);
+        System.out.println("토탈 내용 ==========="+foodFormDto);
+        System.out.println("이미지 리스트 내용 ==========="+foodImgUrlList);
+        //건희 추가 끝
         try{
-            boardService.updateBoard(boardFormDto,boardImgUrlList,boardImgFileList);
+            Board board = boardService.updateBoard(boardFormDto,boardImgUrlList,boardImgFileList);
+            BoardFood boardFood = foodService.updateFoodImg(board,foodImgUrlList, foodFormDto);//건희 추가
+            System.out.println("이미지수정 직후");
+            foodService.updateFoodPart(boardFood,foodDataDtoList); //건희 추가
+            System.out.println("리스트 수정 직후");
+            foodService.saveFoodImg(boardFood, foodImgFileList);  // 건희 추가
+            System.out.println("이미지저장 직후");
         }catch (Exception e){
+            e.printStackTrace();
             model.addAttribute("errorMessage","게시글 수정 중 에러 발생");
+            System.out.println("예외 발생 ~~");
             return "board/boardWrite";
         }
        return "redirect:/board/Detail/"+boardFormDto.getBoardId();
     }
+
+
     @PostMapping("/boardlikeHate")
     @ResponseBody
     public BoardLikeHateDto handleBoardLikeHateRequest(@RequestBody BoardLikeHateDto boardLikeHateDto) {

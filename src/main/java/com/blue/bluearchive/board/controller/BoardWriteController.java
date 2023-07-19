@@ -54,7 +54,7 @@ public class BoardWriteController {
     public String boardNew(@Valid BoardFormDto boardFormDto, BindingResult bindingResult, Model model
             , @RequestParam(value = "foodFormDtoJson",required = false)String  foodFormDtoJson  // 건희 추가
             , @RequestParam(value = "foodDataDtoListJson",required = false)String foodDataDtoListJson // 건희 추가
-            , @RequestParam(value = "foodImgFile",required = false)List<MultipartFile>foodImgFileList
+            , @RequestParam(value = "foodImgFile",required = false)List<MultipartFile>foodImgFileList //건희 추가
             , @RequestParam(value = "boardImgFile",required = false)List<MultipartFile>boardImgFileList){
         //건희 추가 시작
         ObjectMapper objectMapper = new ObjectMapper();

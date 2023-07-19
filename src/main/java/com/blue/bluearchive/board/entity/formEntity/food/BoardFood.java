@@ -1,5 +1,7 @@
 package com.blue.bluearchive.board.entity.formEntity.food;
 
+import com.blue.bluearchive.board.dto.BoardFormDto;
+import com.blue.bluearchive.board.dto.formDto.food.FoodFormDto;
 import com.blue.bluearchive.board.entity.Board;
 import com.blue.bluearchive.board.entity.BoardImg;
 import com.blue.bluearchive.report.entity.Report;
@@ -31,6 +33,15 @@ public class BoardFood {
     @ManyToOne
     @JoinColumn(name = "board_id")
     private Board board;
+
+    public void updateFood(FoodFormDto foodFormDto){
+        this.totalVolume=foodFormDto.getTotalVolume();
+        this.totalKcal=foodFormDto.getTotalKcal();
+        this.totalCarb=foodFormDto.getTotalCarb();
+        this.totalProtein=foodFormDto.getTotalProtein();
+        this.totalFat=foodFormDto.getTotalFat();
+    }
+
 
     @OneToMany(mappedBy = "boardFood", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardFoodImg> boardfoodImgList;
